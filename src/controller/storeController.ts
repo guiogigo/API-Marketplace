@@ -12,10 +12,10 @@ export const createStore = async(req: FastifyRequest, res: FastifyReply) => {
     const createStoreParamsSchema = z.object({
         userId: z.string()
     })
-
+    
     const {name} = createStoreBodySchema.parse(req.body)
-    const {userId} = createStoreParamsSchema.parse(req.params)
-
+    const userId = req.user?.id
+    
     const isUserExists = await prisma.user.findUnique({where: {id: userId}})
     if(!isUserExists) throw new InvalidCredentialsError()
 
