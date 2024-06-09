@@ -38,17 +38,7 @@ export const createProduct = async(req: FastifyRequest, res: FastifyReply) => {
     return res.send({product})
 }
 
-export const getAllStores = async(req: FastifyRequest, res: FastifyReply) => {
-    const stores = await prisma.store.findMany({
-        select: {
-            id: true,
-            name: true,
-            User: {
-                select: {
-                    name: true,
-                }
-            }
-        }
-    })
-    return res.send({ stores })
+export const getAllProducts = async(req: FastifyRequest, res: FastifyReply) => {
+    const products = await prisma.product.findMany()
+    return res.send({ products })
 }

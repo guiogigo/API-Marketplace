@@ -107,6 +107,12 @@ export const getUniqueUser = async(req: FastifyRequest, res: FastifyReply) => {
                             }
                         }
                     }
+                },
+                store: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
                 }
             }
         });
