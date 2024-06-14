@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { any, z } from "zod";
+import { z } from "zod";
 import { prisma } from "../db/prisma";
-import { connect } from "http2";
+
 
 export const createSale = async (req: FastifyRequest, res: FastifyReply) => {
     const requestBodySchema = z.object({
@@ -30,7 +30,7 @@ export const createSale = async (req: FastifyRequest, res: FastifyReply) => {
 
         const productsWithQuantity = productsByDatabase.map(product => {
             const {id, name, price} = product;
-            const quantity = quantitySchema.parse(products.find((p) => p.id === product.id)).quantity
+            const quantity = products.find((p) => p.id === product.id)?.quantity ?? 0
             return {
                 id, 
                 name,
@@ -44,6 +44,10 @@ export const createSale = async (req: FastifyRequest, res: FastifyReply) => {
         let total = 0;
         for(const product of productsWithQuantity) {
             total += product.price * product.quantity
+        }
+
+        if(id === userSellerId) {
+            return res.status(400).send({error: 'Um vendedor não pode comprar da prórpia loja'})
         }
 
         const sale = await prisma.sale.create({
@@ -79,4 +83,122 @@ export const createSale = async (req: FastifyRequest, res: FastifyReply) => {
     } catch(error) {
         return error
     }
+}
+
+export const getAllSales = async(req: FastifyRequest, res: FastifyReply) => {
+    const sales = await prisma.sale.findMany({
+        select: {
+            id: true,
+            total_value: true,
+            Seller: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            Buyer: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            SaleProduct: {
+                select: {
+                    Product: {
+                        select: {
+                            id: true,
+                            name: true,
+                            price: true,
+                        }
+                    },
+                    quantity: true,
+                }
+            },
+            created_at: true,
+        }
+    })
+
+    return res.status(200).send({sales})
+}
+
+export const getAllSalesByBuyer = async(req: FastifyRequest, res: FastifyReply) => {
+    const id = req.user?.id
+
+    const sales = await prisma.sale.findMany({
+        where: {
+            buyerId: id
+        },
+        select: {
+            id: true,
+            total_value: true,
+            Seller: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            Buyer: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            SaleProduct: {
+                select: {
+                    Product: {
+                        select: {
+                            id: true,
+                            name: true,
+                            price: true,
+                        }
+                    },
+                    quantity: true,
+                }
+            },
+            created_at: true,
+        }
+    })
+
+    return res.status(200).send({sales})
+}
+
+export const getAllSalesBySeller = async(req: FastifyRequest, res: FastifyReply) => {
+    const id = req.user?.id
+
+    const sales = await prisma.sale.findMany({
+        where: {
+            sellerId: id
+        },
+        select: {
+            id: true,
+            total_value: true,
+            Seller: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            Buyer: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            SaleProduct: {
+                select: {
+                    Product: {
+                        select: {
+                            id: true,
+                            name: true,
+                            price: true,
+                        }
+                    },
+                    quantity: true,
+                }
+            },
+            created_at: true,
+        }
+    })
+
+    return res.status(200).send({sales})
 }
